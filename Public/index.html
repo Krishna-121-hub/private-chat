@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IP Private Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0,255,170,0.25), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(0,140,255,0.22), transparent 30%),
+        linear-gradient(135deg, #020617, #000);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 14px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 560px;
+      height: 96vh;
+      border-radius: 26px;
+      overflow: hidden;
+      background: rgba(10,10,10,0.72);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 0 60px rgba(0,255,170,0.18);
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 16px;
+      background: linear-gradient(135deg, #00c853, #00695c);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .status {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 3px;
+    }
+
+    .pill {
+      background: rgba(0,0,0,0.25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .owner-toggle {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+
+    .owner-toggle button {
+      margin: 0;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+    }
+
+    .owner {
+      display: none;
+      padding: 12px;
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+      max-height: 310px;
+      overflow-y: auto;
+    }
+
+    .owner.show { display: block; }
+
+    .owner h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #a7f3d0;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      border-radius: 14px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    input, select {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    input::placeholder { color: #aaa; }
+
+    button {
+      background: linear-gradient(135deg, #00e676, #00a86b);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .link {
+      color: #38bdf8;
+      word-break: break-all;
+      font-size: 13px;
+      margin: 7px 0 0;
+    }
+
+    #messages {
+      flex: 1;
+      min-height: 0;
+      padding: 14px;
+      overflow-y: auto;
+      background:
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        radial-gradient(circle at top right, rgba(16,185,129,0.16), transparent 35%);
+    }
+
+    .msg {
+      max-width: 78%;
+      padding: 10px 12px;
+      border-radius: 18px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.11);
+      animation: pop 0.18s ease;
+      word-wrap: break-word;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .my-msg {
+      margin-left: auto;
+      background: linear-gradient(135deg, #075e54, #128c7e);
+      border-bottom-right-radius: 5px;
+    }
+
+    .other-msg {
+      margin-right: auto;
+      border-bottom-left-radius: 5px;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .time {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .seen {
+      font-size: 11px;
+      color: #bbf7d0;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .system {
+      text-align: center;
+      color: #86efac;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+
+    #typingStatus {
+      padding: 5px 14px;
+      color: #7dd3fc;
+      font-size: 13px;
+      min-height: 24px;
+      background: rgba(0,0,0,0.58);
+      flex-shrink: 0;
+    }
+
+    .composer {
+      padding: 12px;
+      background: rgba(10,10,10,0.96);
+      border-top: 1px solid rgba(255,255,255,0.10);
+      flex-shrink: 0;
+    }
+
+    .composer-grid {
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 8px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .file-btn {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+    }
+
+    img.chat-img {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-top: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    a.file-link {
+      color: white;
+      background: rgba(255,255,255,0.14);
+      padding: 8px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 7px;
+      text-decoration: none;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 0; }
+      .app {
+        height: 100vh;
+        border-radius: 0;
+      }
+      .row, .composer-grid, .action-grid {
+        grid-template-columns: 1fr;
+      }
+      .msg { max-width: 88%; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="title">IP Private Chat ⚡</div>
+      <div class="status">Invite only • No history • Auto delete</div>
+    </div>
+    <div class="pill" id="userCount">Users: 0 / 4</div>
+  </div>
+
+  <div class="owner-toggle" id="ownerToggleBox">
+    <button onclick="toggleOwner()">⚙️ Owner Control Open / Close</button>
+  </div>
+
+  <div class="owner" id="ownerPanel">
+    <h3>Owner Control</h3>
+
+    <input id="ownerPin" placeholder="Owner PIN">
+    <input id="roomKey" placeholder="Current room key">
+
+    <div class="row">
+      <button onclick="ownerJoin()">Owner Join</button>
+      <button onclick="generateInvite()">Invite Link</button>
+    </div>
+
+    <input id="newRoomKey" placeholder="New room key">
+    <button onclick="changeRoomKey()">Change Room Key</button>
+
+    <p id="inviteLink" class="link"></p>
+  </div>
+
+  <div id="messages"></div>
+
+  <div id="typingStatus"></div>
+
+  <div class="composer">
+<input id="msg" placeholder="Type private message..." oninput="handleTyping()" onkeydown="handleEnter(event)">
+
+    <div class="composer-grid">
+      <input id="fileInput" type="file">
+      <select id="timer">
+        <option value="60000">1 Min</option>
+        <option value="300000" selected>5 Min</option>
+        <option value="600000">10 Min</option>
+      </select>
+    </div>
+
+    <div class="action-grid">
+      <button onclick="sendMessage()">🚀 Send</button>
+      <button class="file-btn" onclick="sendFile()">📎 File / Image</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+let joined = false;
+let typingTimer;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+function toggleOwner() {
+  document.getElementById("ownerPanel").classList.toggle("show");
+}
+
+function ownerJoin() {
+  socket.emit("owner_join", {
+    ownerPin: document.getElementById("ownerPin").value.trim(),
+    roomKey: document.getElementById("roomKey").value.trim()
+  });
+}
+
+function changeRoomKey() {
+  socket.emit("change_room_key", {
+    ownerPin: document.getElementById("ownerPin").value.trim(),
+    newRoomKey: document.getElementById("newRoomKey").value.trim()
+  });
+}
+
+function generateInvite() {
+  socket.emit("generate_invite", {
+    ownerPin: document.getElementById("ownerPin").value.trim()
+  });
+}
+
+function sendMessage() {
+  const message = document.getElementById("msg").value.trim();
+  const deleteTime = document.getElementById("timer").value;
+
+  if (!joined) return alert("First join room");
+  if (!message) return;
+
+  socket.emit("send_message", { message, deleteTime });
+  socket.emit("stop_typing");
+  document.getElementById("msg").value = "";
+}
+
+function handleEnter(e) {
+  if (e.key === "Enter") {
+    if (e.shiftKey) return; // shift+enter = new line
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function sendFile() {
+  const fileInput = document.getElementById("fileInput");
+  const file = fileInput.files[0];
+  const deleteTime = document.getElementById("timer").value;
+
+  if (!joined) return alert("First join room");
+  if (!file) return alert("Please select a file");
+
+  if (file.size > MAX_FILE_SIZE) {
+    return alert("File size must be under 5 MB");
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    socket.emit("send_file", {
+      fileName: file.name,
+      fileType: file.type,
+      fileData: e.target.result,
+      deleteTime
+    });
+
+    fileInput.value = "";
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function handleTyping() {
+  if (!joined) return;
+
+  socket.emit("typing");
+  clearTimeout(typingTimer);
+
+  typingTimer = setTimeout(() => {
+    socket.emit("stop_typing");
+  }, 1000);
+}
+
+socket.on("invite_created", (token) => {
+  const link = window.location.origin + "/?invite=" + token;
+  document.getElementById("inviteLink").innerHTML = "Invite Link: " + link;
+});
+
+socket.on("room_key_changed", (msg) => alert(msg));
+
+socket.on("receive_message", (data) => {
+  const box = document.getElementById("messages");
+  const divId = "msg_" + data.id;
+  const isMine = data.senderId === socket.id;
+
+  let content = "";
+
+  if (data.type === "text") {
+    content = data.message;
+  } else if (data.type === "file") {
+    if (data.fileType.startsWith("image/")) {
+      content = `
+        <b>${data.fileName}</b><br>
+        <img class="chat-img" src="${data.fileData}">
+      `;
+    } else {
+      content = `
+        <b>${data.fileName}</b><br>
+        <a class="file-link" href="${data.fileData}" download="${data.fileName}">Download File</a>
+      `;
+    }
+  }
+
+  box.innerHTML += `
+    <div class="msg ${isMine ? "my-msg" : "other-msg"}" id="${divId}">
+      <div class="time">${data.time}</div>
+      ${content}
+      ${isMine ? `<div class="seen" id="seen_${data.id}">Sent ✓</div>` : ""}
+    </div>
+  `;
+
+  box.scrollTop = box.scrollHeight;
+
+  if (!isMine) {
+    socket.emit("message_seen", { messageId: data.id });
+  }
+
+  setTimeout(() => {
+    const el = document.getElementById(divId);
+    if (el) el.remove();
+  }, data.deleteTime);
+});
+
+socket.on("message_seen_update", (data) => {
+  const seenBox = document.getElementById("seen_" + data.messageId);
+  if (seenBox) seenBox.innerText = "Seen ✓✓";
+});
+
+socket.on("typing_status", (text) => {
+  document.getElementById("typingStatus").innerText = text;
+});
+
+socket.on("system_message", (msg) => {
+  joined = true;
+  document.getElementById("messages").innerHTML += `<p class="system">${msg}</p>`;
+});
+
+socket.on("user_count", (count) => {
+  document.getElementById("userCount").innerText = "Users: " + count + " / 4";
+});
+
+socket.on("error_message", (msg) => alert(msg));
+
+window.onload = function () {
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get("invite");
+
+  if (invite) {
+    document.getElementById("ownerToggleBox").style.display = "none";
+    document.getElementById("ownerPanel").style.display = "none";
+
+    setTimeout(() => socket.emit("join_with_invite", invite), 500);
+  }
+};
+</script>
+
+</body>
+</html>
