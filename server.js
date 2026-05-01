@@ -1,18 +1,21 @@
 const express = require("express");
 const http = require("http");
 const crypto = require("crypto");
+const path = require("path");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
+const app = express();
+
+app.use(cors());
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const app = express();
-app.use(cors());
-app.use(express.static("public"));
-
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: { origin: "*" },
   maxHttpBufferSize: 6e6
