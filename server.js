@@ -4,6 +4,10 @@ const crypto = require("crypto");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
+});
+
 const app = express();
 app.use(cors());
 app.use(express.static("public"));
