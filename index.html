@@ -296,11 +296,11 @@
 
   <div id="typingStatus"></div>
 
-  <div class="composer">
-<input id="msg" placeholder="Type private message..." oninput="handleTyping()" onkeydown="handleEnter(event)">
+  <div class="composer" style="display:flex; flex-direction:column; gap:8px;">
+<input id="msg" style="width:100%;" placeholder="Type private message..." oninput="handleTyping()" onkeydown="handleEnter(event)">
 
-    <div class="composer-grid">
-      <input id="fileInput" type="file">
+    <div class="composer-grid" style="display:flex; flex-direction:column; gap:6px;">
+      <input id="fileInput" type="file" onchange="sendFile()" style="width:100%;">
       <select id="timer">
         <option value="60000">1 Min</option>
         <option value="300000" selected>5 Min</option>
@@ -308,9 +308,8 @@
       </select>
     </div>
 
-    <div class="action-grid">
+    <div class="action-grid" style="display:flex; flex-direction:column; gap:6px;">
       <button onclick="sendMessage()">🚀 Send</button>
-      <button class="file-btn" onclick="sendFile()">📎 File / Image</button>
     </div>
   </div>
 

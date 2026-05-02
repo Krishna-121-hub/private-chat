@@ -25,7 +25,7 @@ const OWNER_PIN = "stock00qwertyuiop";
 let currentRoomKey = "asdfghjkl";
 
 const roomUsers = {};
-const inviteTokens = {};
+const inviteTokens = {};4
 const MAX_USERS = 4;
 const INVITE_EXPIRE_TIME = 30 * 60 * 1000;
 
